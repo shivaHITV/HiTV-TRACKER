@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}404 Not Found — HiTV{% endblock %}
+{% block page_title %}Page Not Found{% endblock %}
+{% block content %}
+<div class="card" style="max-width:480px;margin:40px auto;">
+  <div class="card-body" style="text-align:center;padding:48px 32px;">
+    <div style="font-size:56px;margin-bottom:16px;">🔍</div>
+    <h2 style="font-size:20px;color:#1a3a5c;margin-bottom:8px;">Page Not Found</h2>
+    <p style="color:#596778;font-size:14px;margin-bottom:24px;">
+      The page you're looking for doesn't exist.
+    </p>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">← Back to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Clients — HiTV Admin{% endblock %}
+{% block page_title %}Clients{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('admin.create_client') }}" class="btn btn-amber btn-sm">+ Add Client</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All Clients ({{ clients|length }})</span>
+  </div>
+  <div class="table-wrap">
+    {% if clients %}
+    <table>
+      <thead>
+        <tr>
+          <th>Client Name</th>
+          <th>Contact Email</th>
+          <th>Tasks</th>
+          <th>Notes</th>
+          <th>Added</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+        <tr>
+          <td style="font-weight:600;">{{ client.name }}</td>
+          <td style="color:#596778;">{{ client.contact_email or '—' }}</td>
+          <td>
+            <a href="{{ url_for('admin.tasks') }}?client_id={{ client.id }}" class="btn btn-outline btn-sm">
+              {{ client.tasks.count() }} tasks
+            </a>
+          </td>
+          <td style="color:#596778;max-width:200px;">
+            {{ client.notes[:80] ~ '…' if client.notes and client.notes|length > 80 else (client.notes or '—') }}
+          </td>
+          <td>{{ client.created_at.strftime('%b %d, %Y') }}</td>
+          <td style="display:flex;gap:6px;">
+            <a href="{{ url_for('admin.edit_client', client_id=client.id) }}" class="btn btn-outline btn-sm">Edit</a>
+            <form method="POST" action="{{ url_for('admin.delete_client', client_id=client.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Delete {{ client.name }}?');">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🏢</div>
+      <p>No clients yet. <a href="{{ url_for('admin.create_client') }}">Add one.</a></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

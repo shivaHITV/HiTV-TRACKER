@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }} — HiTV{% endblock %}
+{% block page_title %}Task Detail{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.is_admin %}
+    <a href="{{ url_for('admin.edit_task', task_id=task.id) }}" class="btn btn-outline btn-sm">✏️ Edit</a>
+  {% endif %}
+  <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-primary btn-sm">← Back</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="breadcrumb">
+  <a href="{{ url_for('tasks.list_tasks') }}">Tasks</a>
+  <span>/</span>
+  {{ task.title }}
+</div>
+
+<div class="grid-2">
+
+  <!-- ── Task Info ────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{{ task.title }}</span>
+      <span class="badge {{ task.status_badge_class }}">{{ task.status|capitalize }}</span>
+    </div>
+    <div class="card-body">
+
+      <table style="width:100%;font-size:13.5px;border-collapse:collapse;">
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;width:140px;">Client</td>
+          <td>{{ task.client.name }}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;">Required Role</td>
+          <td><span class="badge badge-{{ task.role }}">{{ task.role|capitalize }}</span></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;">Assigned To</td>
+          <td>{{ task.assignee.username if task.assignee else '— Unassigned —' }}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;">Deadline</td>
+          <td>
+            {% if task.deadline %}
+              <span class="{% if task.is_overdue %}deadline-near{% endif %}">
+                {{ task.deadline.strftime('%B %d, %Y') }}
+              </span>
+              {% if task.is_overdue %}
+                <span class="overdue-pill">Overdue</span>
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;">Created By</td>
+          <td>{{ task.creator.username }}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;">Created At</td>
+          <td>{{ task.created_at.strftime('%B %d, %Y at %H:%M') }}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#596778;font-weight:600;">Last Updated</td>
+          <td>{{ task.updated_at.strftime('%B %d, %Y at %H:%M') }}</td>
+        </tr>
+      </table>
+
+      {% if task.description %}
+      <div style="margin-top:18px;">
+        <div class="form-label" style="margin-bottom:8px;">Description</div>
+        <div style="background:#f8f9fc;border-radius:8px;padding:14px;font-size:13.5px;line-height:1.7;color:#2d3748;">
+          {{ task.description }}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- ── Update Status ────────────────────────────────────── -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Update Status</span>
+      </div>
+      <div class="card-body">
+        {% if current_user.is_admin or task.assigned_to_id == current_user.id %}
+        <form method="POST" action="{{ url_for('tasks.update_status', task_id=task.id) }}">
+          {{ form.hidden_tag() }}
+          <div class="form-group">
+            <label class="form-label">Current Status</label>
+            {{ form.status(class="form-control") }}
+          </div>
+          <button type="submit" class="btn btn-amber" style="width:100%;justify-content:center;">
+            Update Status
+          </button>
+        </form>
+        {% else %}
+        <div class="empty-state" style="padding:20px;">
+          <p>You are not assigned to this task.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Status guide -->
+    <div class="card" style="margin-top:18px;">
+      <div class="card-header"><span class="card-title">Status Guide</span></div>
+      <div class="card-body" style="font-size:13px;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="badge badge-pending">Pending</span>
+            <span style="color:#596778;">Task has been created but work hasn't started yet.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="badge badge-ongoing">Ongoing</span>
+            <span style="color:#596778;">Work is actively in progress.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="badge badge-completed">Completed</span>
+            <span style="color:#596778;">Task has been finished and delivered.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Activity Timeline ─────────────────────────────────── -->
+<div class="card" style="margin-top:24px;">
+  <div class="card-header">
+    <span class="card-title">
+      📋 Activity Log
+      <span style="font-weight:400;color:#9aa5b4;font-size:13px;">({{ activity|length }})</span>
+    </span>
+  </div>
+  <div class="card-body" style="padding:0 22px;">
+    {% if activity %}
+    <div class="timeline">
+      {% for entry in activity %}
+      <div class="timeline-item">
+        <div class="timeline-dot">{{ entry.event_icon }}</div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <span class="timeline-label">{{ entry.event_label }}</span>
+            <span class="timeline-actor">by {{ entry.actor.username if entry.actor else 'System' }}</span>
+            <span class="timeline-time">{{ entry.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
+          </div>
+          <div class="timeline-detail">{{ entry.detail }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:28px 0;">
+      <div class="empty-icon">📋</div>
+      <p>No activity recorded yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Comments Section ──────────────────────────────────── -->
+<div class="card" style="margin-top:24px;" id="comments">
+  <div class="card-header">
+    <span class="card-title">
+      💬 Comments
+      <span style="font-weight:400;color:#9aa5b4;font-size:13px;">({{ comments|length }})</span>
+    </span>
+  </div>
+
+  <div class="comments-thread">
+
+    {% if comments %}
+      {% for comment in comments %}
+      <div class="comment-item {% if comment.author.is_admin %}comment-admin{% endif %}"
+           id="comment-{{ comment.id }}">
+        <div class="comment-avatar">
+          <div class="user-avatar" style="width:34px;height:34px;font-size:13px;flex-shrink:0;">
+            {{ comment.author.username[0].upper() }}
+          </div>
+        </div>
+        <div class="comment-body">
+          <div class="comment-header">
+            <span class="comment-author">
+              {{ comment.author.username }}
+              {% if comment.author.is_admin %}
+                <span class="badge badge-admin" style="font-size:10px;padding:2px 7px;">Admin</span>
+              {% else %}
+                <span class="badge badge-{{ comment.author.role }}" style="font-size:10px;padding:2px 7px;">
+                  {{ comment.author.role|capitalize }}
+                </span>
+              {% endif %}
+            </span>
+            <span class="comment-time" title="{{ comment.created_at.strftime('%B %d, %Y at %H:%M') }}">
+              {{ comment.created_at.strftime('%b %d, %Y at %H:%M') }}
+              {% if comment.is_edited %}
+                <span style="color:#9aa5b4;font-size:11px;">(edited)</span>
+              {% endif %}
+            </span>
+          </div>
+          <div class="comment-text">{{ comment.body }}</div>
+
+          {# Actions: edit/delete for owner or admin #}
+          {% if current_user.id == comment.author_id or current_user.is_admin %}
+          <div class="comment-actions">
+            <a href="{{ url_for('comments.edit_comment', comment_id=comment.id) }}"
+               class="comment-action-link">Edit</a>
+            <form method="POST"
+                  action="{{ url_for('comments.delete_comment', comment_id=comment.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Delete this comment?');">
+              <button type="submit" class="comment-action-link comment-action-danger">Delete</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state" style="padding:32px 20px;">
+      <div class="empty-icon">💬</div>
+      <p>No comments yet. Be the first to leave a progress note.</p>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- ── Add Comment Form ──────────────────────────── -->
+  {% if can_comment %}
+  <div class="comment-compose">
+    <div class="user-avatar" style="width:34px;height:34px;font-size:13px;flex-shrink:0;">
+      {{ current_user.username[0].upper() }}
+    </div>
+    <form method="POST"
+          action="{{ url_for('comments.add_comment', task_id=task.id) }}"
+          style="flex:1;min-width:0;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea name="body" class="comment-textarea" rows="3"
+                placeholder="Add a progress note, question, or update…"
+                maxlength="2000" required></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+        <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+  // Auto-scroll to #comments anchor on load
+  if (window.location.hash === '#comments') {
+    document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+
+{% endblock %}

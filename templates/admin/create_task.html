@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{% if editing %}Edit{% else %}Create{% endif %} Task — HiTV Admin{% endblock %}
+{% block page_title %}{% if editing %}Edit Task{% else %}New Task{% endif %}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('admin.tasks') }}" class="btn btn-outline btn-sm">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{% if editing %}Edit: {{ task.title }}{% else %}Create Production Task{% endif %}</span>
+    </div>
+    <div class="card-body">
+      <form method="POST"
+            action="{% if editing %}{{ url_for('admin.edit_task', task_id=task.id) }}{% else %}{{ url_for('admin.create_task') }}{% endif %}"
+            novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          <label class="form-label">Task Title</label>
+          {{ form.title(class="form-control", placeholder="e.g. Shoot product launch reel") }}
+          {% for e in form.title.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Client</label>
+            {{ form.client_id(class="form-control") }}
+            {% for e in form.client_id.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Required Role</label>
+            {{ form.role(class="form-control") }}
+            {% for e in form.role.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Assign To</label>
+            {{ form.assigned_to_id(class="form-control") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deadline</label>
+            {{ form.deadline(class="form-control") }}
+            <p class="form-hint">Leave blank for no deadline.</p>
+          </div>
+        </div>
+
+        {% if editing %}
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          {{ form.status(class="form-control") }}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          {{ form.description(class="form-control", placeholder="Describe the task in detail…") }}
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+          {% if editing %}Save Changes{% else %}Create Task{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

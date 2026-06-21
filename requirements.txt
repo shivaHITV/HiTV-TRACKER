@@ -1,0 +1,11 @@
+Flask==3.0.3
+Flask-Login==0.6.3
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.1
+Flask-Mail==0.10.0
+WTForms==3.1.2
+openpyxl==3.1.5
+email-validator==2.1.0
+python-dotenv==1.0.1
+Werkzeug==3.0.3
+SQLAlchemy==2.0.36

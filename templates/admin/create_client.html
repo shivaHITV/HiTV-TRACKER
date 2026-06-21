@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{% if editing %}Edit{% else %}Add{% endif %} Client — HiTV Admin{% endblock %}
+{% block page_title %}{% if editing %}Edit Client{% else %}Add Client{% endif %}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('admin.clients') }}" class="btn btn-outline btn-sm">← Back</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:500px;">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{% if editing %}Edit: {{ client.name }}{% else %}New Client{% endif %}</span>
+    </div>
+    <div class="card-body">
+      <form method="POST"
+            action="{% if editing %}{{ url_for('admin.edit_client', client_id=client.id) }}{% else %}{{ url_for('admin.create_client') }}{% endif %}"
+            novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          <label class="form-label">Client Name</label>
+          {{ form.name(class="form-control", placeholder="e.g. Acme Corp") }}
+          {% for e in form.name.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contact Email (optional)</label>
+          {{ form.contact_email(class="form-control", placeholder="contact@client.com") }}
+          {% for e in form.contact_email.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          {{ form.notes(class="form-control", placeholder="Any notes about this client…") }}
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+          {% if editing %}Save Changes{% else %}Create Client{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

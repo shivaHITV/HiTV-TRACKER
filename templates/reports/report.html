@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Reports — HiTV{% endblock %}
+{% block page_title %}Reports & Export{% endblock %}
+
+{% block content %}
+
+<!-- ── Filter Form ────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <span class="card-title">Filter Tasks</span>
+  </div>
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('reports.report') }}">
+      <div class="filter-bar" style="background:none;box-shadow:none;padding:0;margin:0;">
+        <div class="filter-group">
+          <label class="filter-label">Client</label>
+          <select name="client_id" class="filter-control">
+            <option value="0">All Clients</option>
+            {% for choice_id, choice_name in form.client_id.choices %}
+              {% if choice_id != 0 %}
+                <option value="{{ choice_id }}" {% if client_id == choice_id %}selected{% endif %}>{{ choice_name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select name="status" class="filter-control">
+            <option value="">All Statuses</option>
+            {% for val, label in [('pending','Pending'),('ongoing','Ongoing'),('completed','Completed')] %}
+              <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Date From</label>
+          <input type="date" name="date_from" class="filter-control" value="{{ date_from }}">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Date To</label>
+          <input type="date" name="date_to" class="filter-control" value="{{ date_to }}">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+        <a href="{{ url_for('reports.report') }}" class="btn btn-outline btn-sm">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Summary Stats ──────────────────────────────────────── -->
+<div class="stat-grid" style="margin-bottom:22px;">
+  <div class="stat-card">
+    <div class="stat-icon">🗂️</div>
+    <div><div class="stat-value">{{ tasks|length }}</div><div class="stat-label">Total Matched</div></div>
+  </div>
+  <div class="stat-card" style="border-top-color:#856404">
+    <div class="stat-icon">⏳</div>
+    <div><div class="stat-value">{{ summary.pending }}</div><div class="stat-label">Pending</div></div>
+  </div>
+  <div class="stat-card" style="border-top-color:#004085">
+    <div class="stat-icon">🔄</div>
+    <div><div class="stat-value">{{ summary.ongoing }}</div><div class="stat-label">Ongoing</div></div>
+  </div>
+  <div class="stat-card" style="border-top-color:#155724">
+    <div class="stat-icon">✅</div>
+    <div><div class="stat-value">{{ summary.completed }}</div><div class="stat-label">Completed</div></div>
+  </div>
+</div>
+
+<!-- ── Export Buttons ─────────────────────────────────────── -->
+{% set export_qs = 'client_id=' ~ client_id ~ '&status=' ~ status ~ '&date_from=' ~ date_from ~ '&date_to=' ~ date_to %}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-header">
+    <span class="card-title">Export Current Results</span>
+  </div>
+  <div class="card-body">
+    <p style="font-size:13px;color:#596778;margin-bottom:14px;">
+      Download the {{ tasks|length }} task(s) shown below using your current filters.
+    </p>
+    <div class="export-btns">
+      <a href="{{ url_for('reports.export_excel') }}?{{ export_qs }}" class="btn btn-primary">
+        📊 Export Excel (.xlsx)
+      </a>
+      <a href="{{ url_for('reports.export_csv') }}?{{ export_qs }}" class="btn btn-outline">
+        📄 Export CSV
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Results Table ──────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Results ({{ tasks|length }})</span>
+  </div>
+  <div class="table-wrap">
+    {% if tasks %}
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Client</th>
+          <th>Role</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+          <th>Deadline</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr {% if task.is_overdue %}class="overdue-row"{% endif %}>
+          <td>
+            <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" style="font-weight:600;">
+              {{ task.title }}
+            </a>
+          </td>
+          <td>{{ task.client.name }}</td>
+          <td><span class="badge badge-{{ task.role }}">{{ task.role|capitalize }}</span></td>
+          <td>{{ task.assignee.username if task.assignee else '—' }}</td>
+          <td><span class="badge {{ task.status_badge_class }}">{{ task.status|capitalize }}</span></td>
+          <td>
+            {% if task.deadline %}
+              <span class="{% if task.is_overdue %}deadline-near{% endif %}">
+                {{ task.deadline.strftime('%b %d, %Y') }}
+              </span>
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ task.created_at.strftime('%b %d, %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p>No tasks match the current filters.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

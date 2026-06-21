@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Edit Comment — HiTV{% endblock %}
+{% block page_title %}Edit Comment{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('tasks.task_detail', task_id=comment.task_id) }}#comments"
+     class="btn btn-outline btn-sm">← Cancel</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Edit Your Comment</span>
+    </div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('comments.edit_comment', comment_id=comment.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label class="form-label">Comment</label>
+          <textarea name="body" class="form-control" rows="5"
+                    maxlength="2000" required>{{ comment.body }}</textarea>
+          <p class="form-hint">Max 2000 characters.</p>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <a href="{{ url_for('tasks.task_detail', task_id=comment.task_id) }}#comments"
+             class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

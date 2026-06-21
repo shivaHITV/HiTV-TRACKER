@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Tasks — HiTV{% endblock %}
+{% block page_title %}My Tasks{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.is_admin %}
+    <a href="{{ url_for('admin.create_task') }}" class="btn btn-amber btn-sm">+ New Task</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Filters ─────────────────────────────────────────────── -->
+<form method="GET" action="{{ url_for('tasks.list_tasks') }}">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label class="filter-label">Status</label>
+      <select name="status" class="filter-control">
+        <option value="">All Statuses</option>
+        {% for val, label in statuses %}
+          <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Role</label>
+      <select name="role" class="filter-control">
+        <option value="">All Roles</option>
+        {% for val, label in [('videographer','Videographer'),('editor','Editor'),('marketer','Marketer')] %}
+          <option value="{{ val }}" {% if selected_role == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+    <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-outline btn-sm">Reset</a>
+  </div>
+</form>
+
+<!-- ── Task Table ─────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Tasks ({{ tasks|length }})</span>
+  </div>
+  <div class="table-wrap">
+    {% if tasks %}
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Client</th>
+          <th>Role</th>
+          {% if current_user.is_admin %}<th>Assigned To</th>{% endif %}
+          <th>Status</th>
+          <th>Deadline</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr {% if task.is_overdue %}class="overdue-row"{% endif %}>
+          <td>
+            <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" style="font-weight:600;">
+              {{ task.title }}
+            </a>
+            {% if task.is_overdue %}<span class="overdue-pill">Overdue</span>{% endif %}
+          </td>
+          <td>{{ task.client.name }}</td>
+          <td><span class="badge badge-{{ task.role }}">{{ task.role|capitalize }}</span></td>
+          {% if current_user.is_admin %}
+          <td>{{ task.assignee.username if task.assignee else '—' }}</td>
+          {% endif %}
+          <td><span class="badge {{ task.status_badge_class }}">{{ task.status|capitalize }}</span></td>
+          <td>
+            {% if task.deadline %}
+              <span class="{% if task.is_overdue %}deadline-near{% endif %}">
+                {{ task.deadline.strftime('%b %d, %Y') }}
+              </span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('tasks.task_detail', task_id=task.id) }}" class="btn btn-outline btn-sm">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>No tasks found matching your filters.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

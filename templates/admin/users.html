@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Users — HiTV Admin{% endblock %}
+{% block page_title %}Team Members{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{{ url_for('admin.create_user') }}" class="btn btn-amber btn-sm">+ Add User</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All Users ({{ users|length }})</span>
+  </div>
+  <div class="table-wrap">
+    {% if users %}
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Tasks Assigned</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td style="font-weight:600;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="user-avatar" style="width:28px;height:28px;font-size:11px;">
+                {{ user.username[0].upper() }}
+              </div>
+              {{ user.username }}
+            </div>
+          </td>
+          <td style="color:#596778;">{{ user.email }}</td>
+          <td><span class="badge badge-{{ user.role }}">{{ user.role|capitalize }}</span></td>
+          <td>{{ user.assigned_tasks.count() }}</td>
+          <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            {% if user.id != current_user.id %}
+            <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Delete user {{ user.username }}? This cannot be undone.');">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+            {% else %}
+            <span style="font-size:12px;color:#9aa5b4;">You</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">👤</div>
+      <p>No users yet. <a href="{{ url_for('admin.create_user') }}">Add one.</a></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Notifications — HiTV{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block topbar_actions %}
+  {% if notifications %}
+    <form method="POST" action="{{ url_for('notifications.mark_all_read') }}" style="display:inline;">
+      <button type="submit" class="btn btn-outline btn-sm">✓ Mark All Read</button>
+    </form>
+    <form method="POST" action="{{ url_for('notifications.clear_all') }}" style="display:inline;"
+          onsubmit="return confirm('Delete all read notifications?');">
+      <button type="submit" class="btn btn-outline btn-sm">🗑 Clear Read</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if notifications %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All Notifications ({{ notifications|length }})</span>
+    <span style="font-size:12px;color:#9aa5b4;">
+      Unread: {{ notifications|selectattr('is_read','equalto',false)|list|length }}
+    </span>
+  </div>
+  <div style="padding:0 22px;">
+    {% for notif in notifications %}
+    <div class="notif-row {% if not notif.is_read %}notif-unread{% endif %}">
+
+      <div class="notif-icon-wrap">
+        <span class="notif-type-icon">{{ notif.type_icon }}</span>
+      </div>
+
+      <div class="notif-body">
+        <div class="notif-message">{{ notif.message }}</div>
+        <div class="notif-meta">
+          <span class="badge badge-{{ notif.notif_type }}" style="font-size:10px;">
+            {{ notif.type_label }}
+          </span>
+          <span style="color:#9aa5b4;">
+            {{ notif.created_at.strftime('%b %d, %Y at %H:%M') }}
+          </span>
+          {% if notif.task_id %}
+            <a href="{{ url_for('tasks.task_detail', task_id=notif.task_id) }}"
+               style="color:#1a3a5c;font-size:12px;">View Task →</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if not notif.is_read %}
+      <div class="notif-actions">
+        <span class="notif-dot" title="Unread"></span>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% else %}
+<div class="card">
+  <div class="card-body">
+    <div class="empty-state" style="padding:48px 20px;">
+      <div class="empty-icon">🔔</div>
+      <p style="font-size:15px;font-weight:600;color:#2d3748;margin-bottom:6px;">All caught up!</p>
+      <p>No notifications yet. They'll appear here when tasks are assigned or deadlines approach.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
